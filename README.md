@@ -1,7 +1,5 @@
-# VidaMais Telemedicina
-
 <p align="center">
-  <b>Trabalho de Conclusão de Curso | AWS re/Start | Generation Brasil </b>
+  <img src="./assets/vidamais-banner.jpeg" alt="VidaMais Telemedicina" width="100%">
 </p>
 
 <p align="center">
@@ -13,17 +11,16 @@
 
 ## Sumário
 
-- [VidaMais Telemedicina](#vidamais-telemedicina)
-  - [Sumário](#sumário)
-  - [Sobre o projeto](#sobre-o-projeto)
-  - [Problema](#problema)
-  - [Solução](#solução)
-  - [Antes x Depois](#antes-x-depois)
-  - [Arquitetura Proposta](#arquitetura-proposta)
-  - [Escopo do MVP](#escopo-do-mvp)
-  - [Requisitos Não-Funcionais](#requisitos-não-funcionais)
-  - [Tecnologias Utilizadas](#tecnologias-utilizadas)
-  - [Integrantes do Grupo](#integrantes-do-grupo)
+- [Sumário](#sumário)
+- [Sobre o projeto](#sobre-o-projeto)
+- [Problema](#problema)
+- [Solução](#solução)
+- [Antes x Depois](#antes-x-depois)
+- [Arquitetura Proposta](#arquitetura-proposta)
+- [Escopo do MVP](#escopo-do-mvp)
+- [Requisitos Não-Funcionais](#requisitos-não-funcionais)
+- [Tecnologias Utilizadas](#tecnologias-utilizadas)
+- [Integrantes do Grupo](#integrantes-do-grupo)
 
 
 ## Sobre o projeto
@@ -74,7 +71,102 @@ Dessa forma, busca-se:
 
 ## Arquitetura Proposta
 
-> *O diagrama da arquitetura proposta poderá ser adicionado na pasta `assets/` deste repositório.* 
+```mermaid
+graph TD
+    %% Usuários
+    subgraph USR ["Usuários"]
+        Users["Pacientes / Médicos<br/>(app / web)"]
+    end
+
+    %% Amazon Cloud Container
+    subgraph CLOUD ["Amazon Cloud"]
+
+        %% Camada de Borda
+        subgraph EDGE ["Camada de Borda"]
+            CF["Amazon CloudFront"]
+            WAF["AWS WAF"]
+            SHIELD["AWS Shield"]
+            APIGW["Amazon API Gateway"]
+            ALB["Application Load Balancer"]
+            COGNITO["Amazon Cognito"]
+
+            CF --> WAF --> SHIELD --> APIGW --> ALB --> COGNITO
+        end
+
+        Users --> CF
+
+        %% Região Principal (São Paulo)
+        subgraph SA_EAST ["Região São Paulo (sa-east-1)"]
+
+            %% VPC Principal
+            subgraph VPC ["VPC | subnets privadas, Multi-AZ, auto scaling"]
+
+                FARGATE["AWS Fargate"]
+
+                %% Zona de Disponibilidade A
+                subgraph AZ_A ["Zona de Disponibilidade A"]
+                    AURORA_A[("Amazon Aurora")]
+                    ELASTICACHE["Amazon ElastiCache"]
+                    S3["Amazon Simple Storage Service (S3)"]
+                end
+
+                %% Zona de Disponibilidade B
+                subgraph AZ_B ["Zona de Disponibilidade B"]
+                    AURORA_B[("Amazon Aurora")]
+                    OPENSEARCH["Amazon OpenSearch Service"]
+                end
+
+                FARGATE --> AZ_A
+                FARGATE --> AZ_B
+                AURORA_A -.-|Réplica| AURORA_B
+            end
+
+            ALB --> FARGATE
+
+            %% Lembretes
+            subgraph REMINDERS ["Lembretes (RF-5: 24h e 1h antes)"]
+                EVB["Amazon EventBridge"]
+                SNS["SNS"]
+                SES["SES (e-mail / WhatsApp)"]
+
+                EVB --> SNS --> SES
+            end
+
+            FARGATE --> EVB
+
+            %% Vídeo
+            subgraph VIDEO ["Vídeo (RF-1)"]
+                CHIME["Amazon Chime<br/>(Vídeo Chamada)"]
+            end
+
+            FARGATE --> CHIME
+
+            %% Segurança e Governança
+            subgraph GOV ["Segurança e Governança"]
+                KMS["AWS KMS"]
+                CT["AWS CloudTrail"]
+                CONFIG["AWS Config"]
+                GD["Amazon GuardDuty"]
+                SH["AWS Security Hub"]
+                MACIE["Amazon Macie"]
+            end
+        end
+
+        %% Região Secundária (DR)
+        subgraph DR ["Região Secundária DR"]
+            AURORA_DR[("Amazon Aurora<br/>Global Database")]
+            S3_DR[("S3 Cross-Region<br/>Replica")]
+            BACKUP["AWS Backup + Vault Lock"]
+        end
+
+        AZ_A -.-> DR
+        AZ_B -.-> DR
+    end
+```
+
+<p align="center">
+  <em>Figura 1 - Arquitetura proposta para a centralização do prontuário eletrônico na AWS</em>
+</p>
 
 | Serviço AWS | Finalidade |
 | :----------- | :----------- |
