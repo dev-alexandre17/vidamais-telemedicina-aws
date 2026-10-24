@@ -6,6 +6,9 @@
   <img src="https://img.shields.io/badge/AWS-re%2FStart-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white" />
   <img src="https://img.shields.io/badge/LGPD-Conforme-0052B4?style=for-the-badge" />
   <img src="https://img.shields.io/badge/Região-sa--east--1%20(São%20Paulo)-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white" />
+  <a href="https://creativecommons.org/licenses/by-nc/4.0/">
+    <img src="https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg?style=for-the-badge" alt="Licença: CC BY-NC 4.0">
+  </a>
 </p>
 
 
