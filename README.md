@@ -72,13 +72,15 @@ Dessa forma, busca-se:
 ## Arquitetura Proposta
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'background': '#ffffff', 'primaryColor': '#ffffff', 'primaryTextColor': '#000000', 'primaryBorderColor': '#000000', 'lineColor': '#333333', 'secondaryColor': '#f8f9fa', 'tertiaryColor': '#f8f9fa', 'clusterBkg': '#f9fbff', 'clusterBorder': '#7C8C92', 'edgeLabelBackground': '#ffffff' }}}%%
+
 graph TD
     %% Definição de Cores por Camada
     classDef users fill:#E8F4FD,stroke:#1F78B4,stroke-width:2px,color:#000000
     classDef edge fill:#FFF3E0,stroke:#FF9900,stroke-width:2px,color:#000000
     classDef auth fill:#FDECEA,stroke:#D13212,stroke-width:2px,color:#000000
     classDef vpc fill:#F0F7FF,stroke:#0052B4,stroke-width:2px,color:#000000
-    classDef az fill:#F8FAFF,stroke:#7C8C92,stroke-width:1.5px,color:#000000
+    classDef az fill:#FFFFFF,stroke:#7C8C92,stroke-width:1.5px,color:#000000
     classDef compute fill:#FFF0E6,stroke:#D13212,stroke-width:2px,color:#000000
     classDef data fill:#F3F0FF,stroke:#3B48CC,stroke-width:2px,color:#000000
     classDef cache fill:#E8F6FF,stroke:#2F9CFF,stroke-width:2px,color:#000000
@@ -88,7 +90,7 @@ graph TD
     classDef reminders fill:#F6FFED,stroke:#52C41A,stroke-width:2px,color:#000000
     classDef security fill:#FFF1F0,stroke:#CF1322,stroke-width:2px,color:#000000
     classDef gov fill:#FEF6FF,stroke:#722ED1,stroke-width:2px,color:#000000
-    classDef dr fill:#F5F5F5,stroke:#595959,stroke-width:2px,color:#000000
+    classDef dr fill:#F8F9FA,stroke:#595959,stroke-width:2px,color:#000000
 
     %% Usuários
     subgraph USR ["Usuários"]
