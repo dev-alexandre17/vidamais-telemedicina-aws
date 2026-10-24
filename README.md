@@ -73,13 +73,30 @@ Dessa forma, busca-se:
 
 ```mermaid
 graph TD
+    %% Definição de Cores por Camada
+    classDef users fill:#E8F4FD,stroke:#1F78B4,stroke-width:2px,color:#000000
+    classDef edge fill:#FFF3E0,stroke:#FF9900,stroke-width:2px,color:#000000
+    classDef auth fill:#FDECEA,stroke:#D13212,stroke-width:2px,color:#000000
+    classDef vpc fill:#F0F7FF,stroke:#0052B4,stroke-width:2px,color:#000000
+    classDef az fill:#F8FAFF,stroke:#7C8C92,stroke-width:1.5px,color:#000000
+    classDef compute fill:#FFF0E6,stroke:#D13212,stroke-width:2px,color:#000000
+    classDef data fill:#F3F0FF,stroke:#3B48CC,stroke-width:2px,color:#000000
+    classDef cache fill:#E8F6FF,stroke:#2F9CFF,stroke-width:2px,color:#000000
+    classDef storage fill:#F0FFF4,stroke:#3F8624,stroke-width:2px,color:#000000
+    classDef search fill:#E6FFFA,stroke:#319795,stroke-width:2px,color:#000000
+    classDef video fill:#E6F7FF,stroke:#1890FF,stroke-width:2px,color:#000000
+    classDef reminders fill:#F6FFED,stroke:#52C41A,stroke-width:2px,color:#000000
+    classDef security fill:#FFF1F0,stroke:#CF1322,stroke-width:2px,color:#000000
+    classDef gov fill:#FEF6FF,stroke:#722ED1,stroke-width:2px,color:#000000
+    classDef dr fill:#F5F5F5,stroke:#595959,stroke-width:2px,color:#000000
+
     %% Usuários
     subgraph USR ["Usuários"]
-        Users["Pacientes / Médicos<br/>(app / web)"]
+        Users["Pacientes / Médicos<br/>(Web / App)"]
     end
 
-    %% Amazon Cloud Container
-    subgraph CLOUD ["Amazon Cloud"]
+    %% Nuvem AWS
+    subgraph CLOUD ["Amazon Web Services"]
 
         %% Camada de Borda
         subgraph EDGE ["Camada de Borda"]
@@ -89,79 +106,101 @@ graph TD
             APIGW["Amazon API Gateway"]
             ALB["Application Load Balancer"]
             COGNITO["Amazon Cognito"]
-
-            CF --> WAF --> SHIELD --> APIGW --> ALB --> COGNITO
         end
 
-        Users --> CF
+        %% Região Principal
+        subgraph SA_EAST ["Região Principal - sa-east-1 (São Paulo)"]
 
-        %% Região Principal (São Paulo)
-        subgraph SA_EAST ["Região São Paulo (sa-east-1)"]
-
-            %% VPC Principal
-            subgraph VPC ["VPC | subnets privadas, Multi-AZ, auto scaling"]
-
-                FARGATE["AWS Fargate"]
+            %% VPC
+            subgraph VPC ["VPC - Subnets Privadas | Multi-AZ | Auto Scaling"]
+                
+                %% Camada de Aplicação
+                FARGATE["AWS Fargate<br/>(Serviços da Aplicação)"]
 
                 %% Zona de Disponibilidade A
                 subgraph AZ_A ["Zona de Disponibilidade A"]
-                    AURORA_A[("Amazon Aurora")]
-                    ELASTICACHE["Amazon ElastiCache"]
-                    S3["Amazon Simple Storage Service (S3)"]
+                    AURORA_A[("Amazon Aurora PostgreSQL<br/>(Instância Primária)")]
+                    ELASTICACHE["Amazon ElastiCache<br/>(Cache)"]
+                    S3["Amazon S3<br/>(Documentos Digitais)"]
                 end
 
                 %% Zona de Disponibilidade B
                 subgraph AZ_B ["Zona de Disponibilidade B"]
-                    AURORA_B[("Amazon Aurora")]
-                    OPENSEARCH["Amazon OpenSearch Service"]
+                    AURORA_B[("Amazon Aurora PostgreSQL<br/>(Instância Standby)")]
+                    OPENSEARCH["Amazon OpenSearch Service<br/>(Busca)"]
                 end
-
-                FARGATE --> AZ_A
-                FARGATE --> AZ_B
-                AURORA_A -.-|Réplica| AURORA_B
             end
 
-            ALB --> FARGATE
-
-            %% Lembretes
-            subgraph REMINDERS ["Lembretes (RF-5: 24h e 1h antes)"]
-                EVB["Amazon EventBridge"]
-                SNS["SNS"]
-                SES["SES (e-mail / WhatsApp)"]
-
-                EVB --> SNS --> SES
+            %% Serviços Complementares
+            subgraph VIDEO ["Atendimento por Vídeo"]
+                CHIME["Amazon Chime SDK<br/>(WebRTC - Videochamada)"]
             end
 
-            FARGATE --> EVB
-
-            %% Vídeo
-            subgraph VIDEO ["Vídeo (RF-1)"]
-                CHIME["Amazon Chime<br/>(Vídeo Chamada)"]
+            subgraph REMINDERS ["Notificações e Lembretes"]
+                EVB["Amazon EventBridge Scheduler"]
+                SNS["Amazon SNS"]
+                SES["Amazon SES<br/>(E-mail / SMS)"]
             end
 
-            FARGATE --> CHIME
-
-            %% Segurança e Governança
-            subgraph GOV ["Segurança e Governança"]
-                KMS["AWS KMS"]
-                CT["AWS CloudTrail"]
-                CONFIG["AWS Config"]
-                GD["Amazon GuardDuty"]
-                SH["AWS Security Hub"]
-                MACIE["Amazon Macie"]
+            subgraph GOV ["Segurança, Auditoria e Governança"]
+                KMS["AWS KMS<br/>(Criptografia)"]
+                CT["AWS CloudTrail<br/>(Auditoria)"]
+                CONFIG["AWS Config<br/>(Conformidade)"]
+                GD["Amazon GuardDuty<br/>(Detecção de Ameaças)"]
+                SH["AWS Security Hub<br/>(Visão Centralizada)"]
+                MACIE["Amazon Macie<br/>(Proteção de Dados Sensíveis)"]
             end
         end
 
-        %% Região Secundária (DR)
-        subgraph DR ["Região Secundária DR"]
-            AURORA_DR[("Amazon Aurora<br/>Global Database")]
-            S3_DR[("S3 Cross-Region<br/>Replica")]
-            BACKUP["AWS Backup + Vault Lock"]
+        %% Região Secundária - DR
+        subgraph DR ["Região Secundária - Disaster Recovery"]
+            AURORA_DR[("Amazon Aurora Global Database<br/>(Replicação Cross-Region)")]
+            S3_DR[("Amazon S3 Cross-Region Replication")]
+            BACKUP["AWS Backup + AWS Backup Vault Lock<br/>(Imutabilidade)"]
         end
-
-        AZ_A -.-> DR
-        AZ_B -.-> DR
     end
+
+    %% Fluxos Principais
+    Users --> CF
+    CF --> WAF --> SHIELD --> APIGW --> ALB
+    ALB --> COGNITO
+    COGNITO --> FARGATE
+
+    %% Conexões com Dados e Aplicação
+    FARGATE --> AZ_A
+    FARGATE --> AZ_B
+    AURORA_A -. "Replicação Síncrona (Multi-AZ)" .- AURORA_B
+
+    FARGATE --> CHIME
+    FARGATE --> EVB
+    EVB --> SNS --> SES
+
+    %% Proteção e Governança
+    FARGATE --> KMS
+
+    %% Replicação para DR
+    AZ_A -. "Replicação Cross-Region" .-> AURORA_DR
+    AZ_B -. "Replicação Cross-Region" .-> AURORA_DR
+    S3 -. "Replicação Cross-Region" .-> S3_DR
+    AZ_A --> BACKUP
+    AZ_B --> BACKUP
+
+    %% Aplicação das Classes
+    class Users users
+    class CF,WAF,SHIELD,APIGW,ALB edge
+    class COGNITO auth
+    class VPC vpc
+    class AZ_A,AZ_B az
+    class FARGATE compute
+    class AURORA_A,AURORA_B,AURORA_DR data
+    class ELASTICACHE cache
+    class S3,S3_DR storage
+    class OPENSEARCH search
+    class CHIME video
+    class EVB,SNS,SES reminders
+    class KMS,CT security
+    class CONFIG,GD,SH,MACIE gov
+    class DR,BACKUP dr
 ```
 
 <p align="center">
